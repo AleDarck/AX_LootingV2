@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AX LootingV2</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@300;400;600&family=Fugaz+One&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- =====================================================
+     CREATOR OVERLAY
+===================================================== -->
+<div id="creatorOverlay" class="overlay hidden"></div>
+
+<!-- =====================================================
+     CREATOR PANEL
+===================================================== -->
+<div id="creatorPanel" class="creator-panel hidden">
+
+    <!-- Header -->
+    <div class="creator-header">
+        <div class="creator-header-left">
+            <i class="fa-solid fa-toolbox creator-icon"></i>
+            <span class="creator-title">LOOT CREATOR</span>
+        </div>
+        <button id="btnCloseCreator" class="btn-icon-only" title="Cerrar">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+
+    <div class="creator-body">
+
+        <!-- Sidebar tabs (solo iconos, vertical) -->
+        <div class="creator-sidebar">
+            <button class="tab-btn active" data-tab="looting" title="Looting de Props">
+                <i class="fa-solid fa-box-open"></i>
+            </button>
+            <button class="tab-btn" data-tab="box" title="Cajas Estáticas">
+                <i class="fa-solid fa-toolbox"></i>
+            </button>
+            <button class="tab-btn" data-tab="tipos" title="Tipos de Loot">
+                <i class="fa-solid fa-layer-group"></i>
+            </button>
+            <button class="tab-btn" data-tab="modelos" title="Modelos de Peds/Animales">
+                <i class="fa-solid fa-skull"></i>
+            </button>
+        </div>
+
+        <!-- Contenido -->
+        <div class="creator-content">
+
+            <!-- ==================== TAB LOOTING ==================== -->
+            <div id="tabLooting" class="tab-content active">
+                <div class="tab-topbar">
+                    <div class="search-wrap">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input id="searchProps" class="search-input" type="text" placeholder="Buscar prop..." />
+                    </div>
+                    <button id="btnAddProp" class="btn-primary">
+                        <i class="fa-solid fa-plus"></i> AGREGAR PROP
+                    </button>
+                </div>
+
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>PROP</th>
+                                <th>ITEMS</th>
+                                <th>ACCIONES</th>
+                            </tr>
+                        </thead>
+                        <tbody id="propsTableBody"></tbody>
+                    </table>
+                    <div id="propsEmpty" class="table-empty hidden">
+                        <i class="fa-solid fa-inbox"></i>
+                        <p>No hay props configurados</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== TAB BOX ==================== -->
+            <div id="tabBox" class="tab-content hidden">
+                <div class="tab-topbar">
+                    <div class="search-wrap">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input id="searchBoxes" class="search-input" type="text" placeholder="Buscar caja..." />
+                    </div>
+                    <button id="btnAddBox" class="btn-primary">
+                        <i class="fa-solid fa-plus"></i> AGREGAR CAJA
+                    </button>
+                </div>
+
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>PROP</th>
+                                <th>ITEM-N</th>
+                                <th>ITEMS</th>
+                                <th>ACCIONES</th>
+                            </tr>
+                        </thead>
+                        <tbody id="boxesTableBody"></tbody>
+                    </table>
+                    <div id="boxesEmpty" class="table-empty hidden">
+                        <i class="fa-solid fa-inbox"></i>
+                        <p>No hay cajas configuradas</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== TAB TIPOS ==================== -->
+            <div id="tabTipos" class="tab-content hidden">
+                <div class="tab-topbar">
+                    <div class="search-wrap">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input id="searchTipos" class="search-input" type="text" placeholder="Buscar tipo..." />
+                    </div>
+                    <button id="btnAddTipo" class="btn-primary">
+                        <i class="fa-solid fa-plus"></i> AGREGAR TIPO
+                    </button>
+                </div>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>TIPO</th>
+                                <th>ITEMS</th>
+                                <th>ACCIONES</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tiposTableBody"></tbody>
+                    </table>
+                    <div id="tiposEmpty" class="table-empty hidden">
+                        <i class="fa-solid fa-inbox"></i>
+                        <p>No hay tipos de loot configurados</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== TAB MODELOS ==================== -->
+            <div id="tabModelos" class="tab-content hidden">
+                <div class="tab-topbar">
+                    <div class="search-wrap">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input id="searchModelos" class="search-input" type="text" placeholder="Buscar modelo..." />
+                    </div>
+                    <button id="btnAddModelo" class="btn-primary">
+                        <i class="fa-solid fa-plus"></i> AGREGAR MODELO
+                    </button>
+                </div>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>MODELO</th>
+                                <th>TIPO</th>
+                                <th>KNIFE</th>
+                                <th>ACCIONES</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modelosTableBody"></tbody>
+                    </table>
+                    <div id="modelosEmpty" class="table-empty hidden">
+                        <i class="fa-solid fa-inbox"></i>
+                        <p>No hay modelos configurados</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- =====================================================
+     MODAL PROP / BOX
+===================================================== -->
+<div id="modalOverlay" class="modal-overlay hidden"></div>
+<div id="propModal" class="modal hidden">
+    <div class="modal-header">
+        <span id="modalTitle" class="modal-title">AGREGAR PROP</span>
+        <button id="btnCloseModal" class="btn-icon-only">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+
+    <div class="modal-body">
+        <input type="hidden" id="modalMode" value="prop" />
+        <input type="hidden" id="editingId" value="" />
+
+        <!-- NOMBRE -->
+        <div class="form-group">
+            <label class="form-label">Nombre</label>
+            <input id="propName" class="form-input" type="text" placeholder="Nombre descriptivo del prop" />
+        </div>
+
+        <!-- MODELO -->
+        <div class="form-group">
+            <label class="form-label">Modelo del prop</label>
+            <div class="model-row">
+                <input id="propModel" class="form-input" type="text" placeholder="Ej: prop_dumpster_3a" />
+                <button id="btnPlaceProp" class="btn-secondary btn-place hidden">
+                    <i class="fa-solid fa-location-crosshairs"></i> COLOCAR
+                </button>
+            </div>
+            <!-- Coords (solo para BOX) -->
+            <div id="coordsDisplay" class="coords-display hidden">
+                <span id="coordsText">Sin coordenadas</span>
+                <button id="btnClearCoords" class="btn-icon-only btn-danger-icon" title="Borrar coordenadas">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- ITEM NECESARIO (solo BOX) -->
+        <div id="requiredItemGroup" class="form-group hidden">
+            <label class="form-label">Item necesario <span class="form-hint">(opcional)</span></label>
+            <div class="item-search-wrap">
+                <i class="fa-solid fa-cube"></i>
+                <input id="requiredItemInput" class="form-input" type="text" placeholder="Buscar item..." autocomplete="off" />
+                <div id="requiredItemSuggestions" class="suggestions-dropdown hidden"></div>
+            </div>
+            <div id="requiredItemPreview" class="selected-item-preview hidden"></div>
+        </div>
+
+        <!-- ITEMS DEL LOOT -->
+        <div class="form-group">
+            <div class="items-header">
+                <label class="form-label">Items de loot</label>
+                <span id="probTotal" class="prob-total">Total: 0%</span>
+            </div>
+            <div id="itemSlotsList" class="item-slots-list"></div>
+            <button id="btnAddItemSlot" class="btn-add-slot">
+                <i class="fa-solid fa-plus"></i> Agregar slot
+            </button>
+        </div>
+    </div>
+
+    <div class="modal-footer">
+        <button id="btnCancelModal" class="btn-secondary">CANCELAR</button>
+        <button id="btnSaveModal" class="btn-primary">GUARDAR</button>
+    </div>
+</div>
+
+<!-- =====================================================
+     MODAL TIPO DE LOOT
+===================================================== -->
+<div id="tipoModalOverlay" class="modal-overlay hidden"></div>
+<div id="tipoModal" class="modal hidden">
+    <div class="modal-header">
+        <span id="tipoModalTitle" class="modal-title">AGREGAR TIPO</span>
+        <button id="btnCloseTipoModal" class="btn-icon-only"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+        <input type="hidden" id="tipoEditingId" value="" />
+        <div class="form-row-2">
+            <div class="form-group">
+                <label class="form-label">Nombre interno <span class="form-hint">(sin espacios)</span></label>
+                <input id="tipoName" class="form-input" type="text" placeholder="zombie_default" />
+            </div>
+            <div class="form-group">
+                <label class="form-label">Label visible</label>
+                <input id="tipoLabel" class="form-input" type="text" placeholder="Zombie Normal" />
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="items-header">
+                <label class="form-label">Items de loot</label>
+                <span id="tipoProbTotal" class="prob-total">Total: 0%</span>
+            </div>
+            <div id="tipoItemSlotsList" class="item-slots-list"></div>
+            <button id="btnAddTipoItemSlot" class="btn-add-slot">
+                <i class="fa-solid fa-plus"></i> Agregar slot
+            </button>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button id="btnCancelTipoModal" class="btn-secondary">CANCELAR</button>
+        <button id="btnSaveTipoModal" class="btn-primary">GUARDAR</button>
+    </div>
+</div>
+
+<!-- =====================================================
+     MODAL MODELO
+===================================================== -->
+<div id="modeloModalOverlay" class="modal-overlay hidden"></div>
+<div id="modeloModal" class="modal hidden">
+    <div class="modal-header">
+        <span id="modeloModalTitle" class="modal-title">AGREGAR MODELO</span>
+        <button id="btnCloseModeloModal" class="btn-icon-only"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+        <input type="hidden" id="modeloEditingId" value="" />
+        <div class="form-group">
+            <label class="form-label">Nombre del modelo</label>
+            <input id="modeloModel" class="form-input" type="text" placeholder="a_c_boar" />
+        </div>
+        <div class="form-group">
+            <label class="form-label">Tipo de loot asignado</label>
+            <select id="modeloLootType" class="form-input form-select"></select>
+        </div>
+        <div class="toggle-row">
+            <label class="toggle-label">
+                <input type="checkbox" id="modeloIsAnimal" class="toggle-checkbox" />
+                <span class="toggle-track"></span>
+                <span class="toggle-text">Es animal</span>
+            </label>
+            <label class="toggle-label">
+                <input type="checkbox" id="modeloRequireKnife" class="toggle-checkbox" />
+                <span class="toggle-track"></span>
+                <span class="toggle-text">Requiere Knife</span>
+            </label>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button id="btnCancelModeloModal" class="btn-secondary">CANCELAR</button>
+        <button id="btnSaveModeloModal" class="btn-primary">GUARDAR</button>
+    </div>
+</div>
+<div id="confirmOverlay" class="modal-overlay hidden"></div>
+<div id="confirmDialog" class="confirm-dialog hidden">
+    <p id="confirmText" class="confirm-text">¿Estás seguro?</p>
+    <div class="confirm-actions">
+        <button id="confirmNo" class="btn-secondary">CANCELAR</button>
+        <button id="confirmYes" class="btn-danger">ELIMINAR</button>
+    </div>
+</div>
+
+<!-- =====================================================
+     GIZMO HINT (hint en pantalla mientras el gizmo está activo)
+===================================================== -->
+<div id="gizmoHint" class="gizmo-hint hidden">
+    <div class="gizmo-hint-row"><kbd>W A S D</kbd> Mover</div>
+    <div class="gizmo-hint-row"><kbd>Q</kbd><kbd>E</kbd> Subir / Bajar</div>
+    <div class="gizmo-hint-row"><kbd>Num4</kbd><kbd>Num6</kbd> Rotar</div>
+    <div class="gizmo-hint-row"><kbd>Enter</kbd> Confirmar</div>
+    <div class="gizmo-hint-row"><kbd>Esc</kbd> Cancelar</div>
+</div>
+
+<!-- =====================================================
+     LOOT UI
+===================================================== -->
+<div id="lootOverlay" class="overlay hidden"></div>
+<div id="lootPanel" class="loot-panel hidden">
+    <div class="panel-header">
+        <div class="header-left">
+            <i id="lootHeaderIcon" class="fa-solid fa-box-open header-icon"></i>
+            <span id="lootPanelTitle" class="panel-title">BOTÍN ENCONTRADO</span>
+        </div>
+        <button id="btnCloseLoot" class="btn-icon-only">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+    <div class="header-divider"></div>
+    <div id="lootGrid" class="loot-grid"></div>
+    <div id="lootEmpty" class="empty-state hidden">
+        <i class="fa-solid fa-box-open"></i>
+        <p>No hay nada más que recoger</p>
+    </div>
+    <div class="panel-footer">
+        <div class="footer-info">
+            <i class="fa-solid fa-hand"></i>
+            <span id="lootItemCount">0 items encontrados</span>
+        </div>
+        <button id="btnCollectAll" class="btn-collect-all">
+            <i class="fa-solid fa-bag-shopping"></i> RECOGER TODO
+        </button>
+    </div>
+</div>
+
+<!-- =====================================================
+     BOX UI (caja de jugador abatido)
+===================================================== -->
+<div id="boxOverlay" class="overlay hidden"></div>
+<div id="boxPanel" class="loot-panel hidden">
+    <div class="panel-header">
+        <div class="header-left">
+            <i class="fa-solid fa-toolbox header-icon"></i>
+            <span id="boxPanelTitle" class="panel-title">CAJA</span>
+        </div>
+        <button id="btnCloseBoxUI" class="btn-icon-only">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+    <div class="header-divider"></div>
+    <div id="boxGrid" class="loot-grid loading-grid">
+        <div class="loading-indicator">
+            <div class="spinner-ring"></div>
+            <span>Revisando contenido...</span>
+        </div>
+    </div>
+    <div id="boxEmpty" class="empty-state hidden">
+        <i class="fa-solid fa-box-open"></i>
+        <p>La caja está vacía</p>
+    </div>
+    <div class="panel-footer">
+        <div class="footer-info">
+            <i class="fa-solid fa-hand"></i>
+            <span id="boxItemCount">Cargando...</span>
+        </div>
+        <button id="btnCollectAllBox" class="btn-collect-all" disabled>
+            <i class="fa-solid fa-bag-shopping"></i> RECOGER TODO
+        </button>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
