@@ -13,6 +13,7 @@ local isCreatorOpen   = false
 local isGizmoActive   = false  -- true cuando el gizmo esta activo
 local isLootUIOpen    = false
 local isSearching     = false
+local pedLootedRecently = false
 
 -- Cache local de configuracion del servidor
 local cachedProps      = {}
@@ -141,7 +142,6 @@ end)
 
 -- BOXES ---
 RegisterNUICallback('createBox', function(data, cb)
-    -- Ocultar creator completamente, iniciar gizmo
     isCreatorOpen = false
     isGizmoActive = true
     SetNuiFocus(false, false)
@@ -284,15 +284,30 @@ function startGizmo(modelName, onConfirm)
     local model = GetHashKey(gizmoModel)
     RequestModel(model)
     CreateThread(function()
-        while not HasModelLoaded(model) do Wait(10) end
+        local timeout = 0
+        while not HasModelLoaded(model) and timeout < 100 do
+            Wait(100)
+            timeout = timeout + 1
+        end
+
+        if not HasModelLoaded(model) then
+            ESX.ShowNotification('No se pudo cargar el modelo: ' .. gizmoModel, 'error')
+            isGizmoActive = false
+            isCreatorOpen = true
+            SetNuiFocus(true, true)
+            SendNUIMessage({ action = 'returnToCreator', tab = 'box' })
+            if gizmoCallback then gizmoCallback = nil end
+            return
+        end
 
         gizmoEntity = CreateObject(model,
             gizmoCoords.x, gizmoCoords.y, gizmoCoords.z,
-            false, false, true)
+            true, true, true)
         SetEntityHeading(gizmoEntity, gizmoHeading)
-        SetEntityAlpha(gizmoEntity, 180, false)
+        SetEntityAlpha(gizmoEntity, 200, false)
         SetEntityCollision(gizmoEntity, false, false)
         FreezeEntityPosition(gizmoEntity, true)
+        NetworkRequestControlOfEntity(gizmoEntity)
         SetModelAsNoLongerNeeded(model)
 
         gizmoActive = true
@@ -325,6 +340,15 @@ end
 CreateThread(function()
     while true do
         if gizmoActive then
+            DisableControlAction(0, 30, true)
+            DisableControlAction(0, 31, true)
+            DisableControlAction(0, 32, true)
+            DisableControlAction(0, 33, true)
+            DisableControlAction(0, 34, true)
+            DisableControlAction(0, 35, true)
+            DisableControlAction(0, 44, true)
+            DisableControlAction(0, 38, true)
+
             local step  = Config.Gizmo.moveStep
             local rStep = Config.Gizmo.rotateStep
 
@@ -368,15 +392,6 @@ CreateThread(function()
             end
 
             updateGizmoPosition()
-
-            SetTextFont(4)
-            SetTextProportional(true)
-            SetTextScale(0.35, 0.35)
-            SetTextColour(255, 255, 255, 220)
-            SetTextEntry('STRING')
-            AddTextComponentString('WASD: Mover  |  Q/E: Subir/Bajar  |  Num4/6: Rotar  |  ENTER: Confirmar  |  ESC: Cancelar')
-            DrawText(0.5, 0.92)
-
             Wait(0)
         else
             Wait(200)
@@ -815,9 +830,14 @@ local nearbyPed      = nil
 
 CreateThread(function()
     while true do
-        if isLootUIOpen or isSearching then
+        if isLootUIOpen or isSearching or pedLootedRecently then
             nearbyPed = nil
-            Wait(500)
+            if pedLootedRecently then
+                Wait(2000)
+                pedLootedRecently = false
+            else
+                Wait(500)
+            end
         else
             local playerPed    = PlayerPedId()
             local playerCoords = getPlayerCoords()
@@ -891,6 +911,7 @@ CreateThread(function()
                             },
                         }, function(cancelled)
                             isSearching = false
+                            nearbyPed   = nil  -- <-- FIX
                             if cancelled then return end
                             if not DoesEntityExist(ped.entity) then
                                 ESX.ShowNotification('El cuerpo ya no está aquí.', 'error')
@@ -926,6 +947,7 @@ CreateThread(function()
                         },
                     }, function(cancelled)
                         isSearching = false
+                        nearbyPed   = nil  -- <-- FIX
                         if cancelled then return end
                         if not DoesEntityExist(ped.entity) then
                             ESX.ShowNotification('El cuerpo ya no está aquí.', 'error')

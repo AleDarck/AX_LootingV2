@@ -579,8 +579,14 @@ function openBoxModal(mode, id = null) {
 document.getElementById('btnPlaceProp').addEventListener('click', () => {
     const model = document.getElementById('propModel').value.trim();
     if (!model) return;
+    const saveData = buildSaveData(true);
+    if (!saveData.name || !saveData.model) return;
     closeModalEl();
-    post('createBox', buildSaveData(true));
+    if (editingId !== null) {
+        post('updateBox', saveData);
+    } else {
+        post('createBox', saveData);
+    }
 });
 
 function buildSaveData(useGizmo = false) {
