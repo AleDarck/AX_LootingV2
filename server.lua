@@ -420,6 +420,7 @@ RegisterNetEvent('AX_LootingV2:server:requestPropLoot', function(propId, x, y, z
     local player = ESX.GetPlayerFromId(src)
     if not player then return end
 
+    -- Buscar config del prop
     local propCfg = nil
     for _, p in ipairs(cachedProps) do
         if p.id == propId then propCfg = p break end
@@ -444,15 +445,7 @@ RegisterNetEvent('AX_LootingV2:server:requestPropLoot', function(propId, x, y, z
     end
 
     propCooldowns[propKey] = now
-
-    for _, item in ipairs(loot) do
-        if item.name == 'money' then
-            player.addMoney(item.count)
-        else
-            player.addInventoryItem(item.name, item.count)
-        end
-    end
-    TriggerClientEvent('esx:showNotification', src, 'Has encontrado algunos materiales.')
+    TriggerClientEvent('AX_LootingV2:client:openLootUI', src, enrichWithLabels(loot), 'prop')
 end)
 
 -- ============================================================
@@ -473,16 +466,19 @@ RegisterNetEvent('AX_LootingV2:server:requestBoxLoot', function(boxId, x, y, z)
     end
     if not boxCfg then return end
 
-    local now   = os.time()
-    local state = boxLootStates[boxId]
+    -- Cooldown por instancia (mismo boxId = misma coords siempre)
+    local now      = os.time()
+    local state    = boxLootStates[boxId]
     if state and state.lastLooted then
-        local elapsed = now - state.lastLooted
-        if elapsed < Config.PropCooldown then
-            TriggerClientEvent('AX_LootingV2:client:propOnCooldown', src, Config.PropCooldown - elapsed)
+        local elapsed  = now - state.lastLooted
+        local cooldown = Config.PropCooldown
+        if elapsed < cooldown then
+            TriggerClientEvent('AX_LootingV2:client:propOnCooldown', src, cooldown - elapsed)
             return
         end
     end
 
+    -- Verificar item requerido
     if boxCfg.required_item and boxCfg.required_item ~= '' then
         local hasItem = exports['ox_inventory']:GetItemCount(src, boxCfg.required_item)
         if not hasItem or hasItem < 1 then
@@ -501,15 +497,7 @@ RegisterNetEvent('AX_LootingV2:server:requestBoxLoot', function(boxId, x, y, z)
     end
 
     boxLootStates[boxId] = { lastLooted = now }
-
-    for _, item in ipairs(loot) do
-        if item.name == 'money' then
-            player.addMoney(item.count)
-        else
-            player.addInventoryItem(item.name, item.count)
-        end
-    end
-    TriggerClientEvent('esx:showNotification', src, 'Has encontrado algunos materiales.')
+    TriggerClientEvent('AX_LootingV2:client:openLootUI', src, enrichWithLabels(loot), 'box')
 end)
 
 -- El cliente recoge un item del loot abierto
@@ -676,10 +664,12 @@ RegisterNetEvent('AX_LootingV2:server:requestPedLoot', function(netId, modelName
 
     local modelCfg = modelLookup[modelName]
     if not modelCfg then
+        -- Fallback: buscar si es animal por heuristica del nombre (a_c_)
         TriggerClientEvent('esx:showNotification', src, 'Este cuerpo no tiene loot configurado.')
         return
     end
 
+    -- Verificar knife si es animal con require_knife
     if modelCfg.is_animal and modelCfg.require_knife then
         local hasKnife = exports['ox_inventory']:GetItemCount(src, 'weapon_knife')
         if not hasKnife or hasKnife < 1 then
@@ -688,6 +678,7 @@ RegisterNetEvent('AX_LootingV2:server:requestPedLoot', function(netId, modelName
         end
     end
 
+    -- Buscar el tipo de loot
     local lootTypeCfg = nil
     for _, lt in ipairs(cachedLootTypes) do
         if lt.id == modelCfg.loottype_id then lootTypeCfg = lt break end
@@ -700,11 +691,13 @@ RegisterNetEvent('AX_LootingV2:server:requestPedLoot', function(netId, modelName
     local netIdStr = tostring(netId)
     local state    = pedStates[netIdStr]
 
+    -- Cuerpo ya vaciado
     if state and state.isEmpty then
         TriggerClientEvent('esx:showNotification', src, 'Este cuerpo ya fue saqueado.')
         return
     end
 
+    -- En uso por otro jugador (con auto-liberacion tras 30s)
     if state and state.inUseBy and state.inUseBy ~= src then
         local now = os.time()
         if state.lockedAt and (now - state.lockedAt) > 30 then
@@ -716,27 +709,27 @@ RegisterNetEvent('AX_LootingV2:server:requestPedLoot', function(netId, modelName
         end
     end
 
-    local loot = generateLoot(lootTypeCfg.items)
-    if #loot == 0 then
-        TriggerClientEvent('esx:showNotification', src, 'No encontraste nada.')
-        -- Marcar igual para que no se vuelva a intentar
-        pedStates[netIdStr] = { inUseBy = nil, lockedAt = nil, items = {}, isEmpty = true }
-        TriggerClientEvent('AX_LootingV2:client:deletePed', src, netId)
+    -- Primer acceso: generar loot
+    if not state then
+        local loot = generateLoot(lootTypeCfg.items)
+        if #loot == 0 then
+            TriggerClientEvent('esx:showNotification', src, 'No encontraste nada.')
+            return
+        end
+        pedStates[netIdStr] = {
+            inUseBy  = src,
+            lockedAt = os.time(),
+            items    = loot,
+            isEmpty  = false,
+        }
+        TriggerClientEvent('AX_LootingV2:client:openPedLootUI', src, enrichWithLabels(loot), netId)
         return
     end
 
-    pedStates[netIdStr] = { inUseBy = nil, lockedAt = nil, items = {}, isEmpty = true }
-
-    for _, item in ipairs(loot) do
-        if item.name == 'money' then
-            player.addMoney(item.count)
-        else
-            player.addInventoryItem(item.name, item.count)
-        end
-    end
-
-    TriggerClientEvent('esx:showNotification', src, 'Has encontrado algunos materiales.')
-    TriggerClientEvent('AX_LootingV2:client:deletePed', src, netId)
+    -- Reabrir con loot existente
+    state.inUseBy  = src
+    state.lockedAt = os.time()
+    TriggerClientEvent('AX_LootingV2:client:openPedLootUI', src, enrichWithLabels(state.items), netId)
 end)
 
 RegisterNetEvent('AX_LootingV2:server:leavePed', function(netId)
@@ -820,27 +813,23 @@ AddEventHandler('AX_LootingV2:internal:playerDied', function(src)
     local player = ESX.GetPlayerFromId(src)
     if not player then return end
 
+    -- Si ya tiene una caja activa con items, no crear otra
     local existingId = ownerActiveBox[src]
     if existingId and boxStates[existingId] and not boxStates[existingId].isEmpty then
         return
     end
 
-    -- ox_inventory v2: iterar slots directamente
-    local oxItems = exports['ox_inventory']:GetInventoryItems(src)
+    local oxItems = exports['ox_inventory']:GetInventoryItems(src) or {}
     local items   = {}
 
-    if oxItems then
-        for _, item in pairs(oxItems) do
-            -- GetInventoryItems puede devolver tabla con índice numérico o string
-            local name  = item.name  or item[1]
-            local count = item.count or item[2] or 0
-            if name and count > 0 and not isProtectedItem(name) and name ~= 'money' then
-                table.insert(items, {
-                    name     = name,
-                    count    = count,
-                    metadata = item.metadata or {},
-                })
-            end
+    for _, item in ipairs(oxItems) do
+        local count = item.count or 0
+        if count > 0 and not isProtectedItem(item.name) and item.name ~= 'money' then
+            table.insert(items, {
+                name     = item.name,
+                count    = count,
+                metadata = item.metadata or {},
+            })
         end
     end
 
@@ -856,7 +845,6 @@ AddEventHandler('AX_LootingV2:internal:playerDied', function(src)
         if item.name == 'money' then
             player.removeMoney(item.count)
         else
-            -- Usar RemoveItem slot a slot para no perder metadata
             exports['ox_inventory']:RemoveItem(src, item.name, item.count, item.metadata)
         end
     end
@@ -875,6 +863,7 @@ AddEventHandler('AX_LootingV2:internal:playerDied', function(src)
     }
     ownerActiveBox[src] = boxId
 
+    -- Log Discord
     local itemsList = ''
     for _, item in ipairs(items) do
         itemsList = itemsList .. '• ' .. item.name .. ' x' .. item.count .. '\n'
@@ -886,13 +875,15 @@ AddEventHandler('AX_LootingV2:internal:playerDied', function(src)
         { name = '🗃 Contenido',       value = itemsList ~= '' and itemsList or 'Vacío',               inline = false },
     })
 
+    -- Spawn de la caja en el cliente del dueño (quien spawnea notifica al servidor con netId)
     TriggerClientEvent('AX_LootingV2:client:spawnPlayerBox', src, boxId, player.getName(), src)
 
+    -- Despawn si nadie la toca
     SetTimeout(Config.PlayerBox.despawnUntouched * 60 * 1000, function()
         local st = boxStates[boxId]
         if st and not st.isEmpty and not st.lastTouched then
-            boxStates[boxId]    = nil
-            ownerActiveBox[src] = nil
+            boxStates[boxId]        = nil
+            ownerActiveBox[src]     = nil
             TriggerClientEvent('AX_LootingV2:client:removeBox', -1, boxId)
         end
     end)
@@ -1078,6 +1069,6 @@ AddEventHandler('esx_ambulancejob:PlayerNotDead', function(playerId)
 end)
 
 -- esx_ambulancejob dispara esto cuando el jugador muere definitivamente
-AddEventHandler('AX_Looting:internal:playerConfirmedDead', function(playerId)
+AddEventHandler('esx_ambulancejob:setDeadPlayer', function(playerId)
     TriggerEvent('AX_LootingV2:internal:playerDied', tonumber(playerId))
 end)

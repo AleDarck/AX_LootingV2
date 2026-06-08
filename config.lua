@@ -11,23 +11,29 @@ Config.PropCooldown     = 600    -- segundos de cooldown por instancia de prop (
 --  PROGRESS BAR - Looting de props
 -- ============================================================
 Config.ProgressBar = {
-    duration = 5000,
+    duration = 4000,
     label    = 'Buscando objetos...',
     animDict = 'amb@prop_human_bum_bin@base',
     anim     = 'base',
     flags    = 49,
 }
 
+-- ============================================================
+--  PROGRESS BAR - Looting de peds y animales
+-- ============================================================
 Config.PedProgressBar = {
-    duration = 4000,
+    duration = 3000,
     label    = 'Revisando cuerpo...',
     animDict = 'anim@amb@clubhouse@tutorial@bkr_tut_ig3@',
     anim     = 'machinic_loop_mechandplayer',
     flags    = 1,
 }
 
+-- ============================================================
+--  PROGRESS BAR - Registro de caja de jugador abatido
+-- ============================================================
 Config.BagProgressBar = {
-    duration = 5000,
+    duration = 3000,
     label    = 'Registrando caja...',
     animDict = 'anim@amb@clubhouse@tutorial@bkr_tut_ig3@',
     anim     = 'machinic_loop_mechandplayer',
@@ -43,15 +49,11 @@ Config.InventoryImagePath = 'nui://ox_inventory/web/images/'
 --  LOOTINGBAG (Caja de jugador abatido)
 -- ============================================================
 Config.PlayerBox = {
-    prop           = 'v_ind_meatboxsml',
-    despawnMinutes  = 45,
-    despawnIfEmpty  = 20,
-    despawnUntouched = 35,
-    protectedItems = {
+    prop           = 'prop_tool_box_07',
+    despawnIfEmpty = 20,    -- minutos hasta despawn si quedan items pero nadie la tocó recientemente
+    despawnUntouched = 35,  -- minutos hasta despawn si nadie la tocó nunca
+    protectedItems = {      -- items que NUNCA caen a la caja
         'medallon',
-        -- agrega aquí cualquier item que no quieras que caiga a la caja
-        -- 'driver_license',
-        -- 'phone',
     },
 }
 
@@ -63,7 +65,7 @@ Config.CardRevealDelay = 180  -- ms entre aparicion de cada card
 -- ============================================================
 --  DISCORD WEBHOOK
 -- ============================================================
-Config.DiscordWebhook = 'https://discord.com/api/webhooks/1478532917213794612/9fLQKjUXdYIz6xdC2_yKBg_OtKjTZOi0gmg7ZDzkM3pMwaFpnckFQ9BtmTgI8RYlZ1Dd'
+Config.DiscordWebhook = 'TU_WEBHOOK_AQUI'
 
 -- ============================================================
 --  STAFF GROUPS que pueden usar /lootcreator

@@ -10,17 +10,11 @@
 </head>
 <body>
 
-<!-- =====================================================
-     CREATOR OVERLAY
-===================================================== -->
+<!-- CREATOR OVERLAY -->
 <div id="creatorOverlay" class="overlay hidden"></div>
 
-<!-- =====================================================
-     CREATOR PANEL
-===================================================== -->
+<!-- CREATOR PANEL -->
 <div id="creatorPanel" class="creator-panel hidden">
-
-    <!-- Header -->
     <div class="creator-header">
         <div class="creator-header-left">
             <i class="fa-solid fa-toolbox creator-icon"></i>
@@ -32,214 +26,164 @@
     </div>
 
     <div class="creator-body">
-
-        <!-- Sidebar tabs (solo iconos, vertical) -->
         <div class="creator-sidebar">
-            <button class="tab-btn active" data-tab="looting" title="Looting de Props">
-                <i class="fa-solid fa-box-open"></i>
-            </button>
-            <button class="tab-btn" data-tab="box" title="Cajas Estáticas">
-                <i class="fa-solid fa-toolbox"></i>
-            </button>
-            <button class="tab-btn" data-tab="tipos" title="Tipos de Loot">
-                <i class="fa-solid fa-layer-group"></i>
-            </button>
-            <button class="tab-btn" data-tab="modelos" title="Modelos de Peds/Animales">
-                <i class="fa-solid fa-skull"></i>
-            </button>
+            <button class="tab-btn active" data-tab="looting" title="Looting de Props"><i class="fa-solid fa-box-open"></i></button>
+            <button class="tab-btn" data-tab="box" title="Cajas Estáticas"><i class="fa-solid fa-toolbox"></i></button>
+            <button class="tab-btn" data-tab="tipos" title="Tipos de Loot"><i class="fa-solid fa-layer-group"></i></button>
+            <button class="tab-btn" data-tab="modelos" title="Modelos de Peds/Animales"><i class="fa-solid fa-skull"></i></button>
         </div>
 
-        <!-- Contenido -->
         <div class="creator-content">
-
-            <!-- ==================== TAB LOOTING ==================== -->
+            <!-- TAB LOOTING -->
             <div id="tabLooting" class="tab-content active">
                 <div class="tab-topbar">
                     <div class="search-wrap">
                         <i class="fa-solid fa-magnifying-glass"></i>
                         <input id="searchProps" class="search-input" type="text" placeholder="Buscar prop..." />
                     </div>
-                    <button id="btnAddProp" class="btn-primary">
-                        <i class="fa-solid fa-plus"></i> AGREGAR PROP
-                    </button>
+                    <button id="btnAddProp" class="btn-primary"><i class="fa-solid fa-plus"></i> AGREGAR PROP</button>
                 </div>
-
                 <div class="table-wrap">
                     <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>PROP</th>
-                                <th>ITEMS</th>
-                                <th>ACCIONES</th>
-                            </tr>
-                        </thead>
+                        <thead><tr><th>PROP</th><th>ITEMS</th><th>PORCENTAJE</th><th>ACCIONES</th></tr></thead>
                         <tbody id="propsTableBody"></tbody>
                     </table>
-                    <div id="propsEmpty" class="table-empty hidden">
-                        <i class="fa-solid fa-inbox"></i>
-                        <p>No hay props configurados</p>
-                    </div>
+                    <div id="propsEmpty" class="table-empty hidden"><i class="fa-solid fa-inbox"></i><p>No hay props configurados</p></div>
                 </div>
             </div>
 
-            <!-- ==================== TAB BOX ==================== -->
+            <!-- TAB BOX -->
             <div id="tabBox" class="tab-content hidden">
                 <div class="tab-topbar">
                     <div class="search-wrap">
                         <i class="fa-solid fa-magnifying-glass"></i>
                         <input id="searchBoxes" class="search-input" type="text" placeholder="Buscar caja..." />
                     </div>
-                    <button id="btnAddBox" class="btn-primary">
-                        <i class="fa-solid fa-plus"></i> AGREGAR CAJA
-                    </button>
+                    <button id="btnAddBox" class="btn-primary"><i class="fa-solid fa-plus"></i> AGREGAR CAJA</button>
                 </div>
-
                 <div class="table-wrap">
                     <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>PROP</th>
-                                <th>ITEM-N</th>
-                                <th>ITEMS</th>
-                                <th>ACCIONES</th>
-                            </tr>
-                        </thead>
+                        <thead><tr><th>PROP</th><th>ITEM-N</th><th>ITEMS</th><th>PORCENTAJE</th><th>ACCIONES</th></tr></thead>
                         <tbody id="boxesTableBody"></tbody>
                     </table>
-                    <div id="boxesEmpty" class="table-empty hidden">
-                        <i class="fa-solid fa-inbox"></i>
-                        <p>No hay cajas configuradas</p>
-                    </div>
+                    <div id="boxesEmpty" class="table-empty hidden"><i class="fa-solid fa-inbox"></i><p>No hay cajas configuradas</p></div>
                 </div>
             </div>
 
-            <!-- ==================== TAB TIPOS ==================== -->
+            <!-- TAB TIPOS -->
             <div id="tabTipos" class="tab-content hidden">
                 <div class="tab-topbar">
                     <div class="search-wrap">
                         <i class="fa-solid fa-magnifying-glass"></i>
                         <input id="searchTipos" class="search-input" type="text" placeholder="Buscar tipo..." />
                     </div>
-                    <button id="btnAddTipo" class="btn-primary">
-                        <i class="fa-solid fa-plus"></i> AGREGAR TIPO
-                    </button>
+                    <button id="btnAddTipo" class="btn-primary"><i class="fa-solid fa-plus"></i> AGREGAR TIPO</button>
                 </div>
                 <div class="table-wrap">
                     <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>TIPO</th>
-                                <th>ITEMS</th>
-                                <th>ACCIONES</th>
-                            </tr>
-                        </thead>
+                        <thead><tr><th>TIPO</th><th>ITEMS</th><th>PORCENTAJE</th><th>ACCIONES</th></tr></thead>
                         <tbody id="tiposTableBody"></tbody>
                     </table>
-                    <div id="tiposEmpty" class="table-empty hidden">
-                        <i class="fa-solid fa-inbox"></i>
-                        <p>No hay tipos de loot configurados</p>
-                    </div>
+                    <div id="tiposEmpty" class="table-empty hidden"><i class="fa-solid fa-inbox"></i><p>No hay tipos configurados</p></div>
                 </div>
             </div>
 
-            <!-- ==================== TAB MODELOS ==================== -->
+            <!-- TAB MODELOS -->
             <div id="tabModelos" class="tab-content hidden">
                 <div class="tab-topbar">
                     <div class="search-wrap">
                         <i class="fa-solid fa-magnifying-glass"></i>
                         <input id="searchModelos" class="search-input" type="text" placeholder="Buscar modelo..." />
                     </div>
-                    <button id="btnAddModelo" class="btn-primary">
-                        <i class="fa-solid fa-plus"></i> AGREGAR MODELO
-                    </button>
+                    <button id="btnAddModelo" class="btn-primary"><i class="fa-solid fa-plus"></i> AGREGAR MODELO</button>
                 </div>
                 <div class="table-wrap">
                     <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>MODELO</th>
-                                <th>TIPO</th>
-                                <th>KNIFE</th>
-                                <th>ACCIONES</th>
-                            </tr>
-                        </thead>
+                        <thead><tr><th>MODELO</th><th>TIPO</th><th>KNIFE</th><th>ACCIONES</th></tr></thead>
                         <tbody id="modelosTableBody"></tbody>
                     </table>
-                    <div id="modelosEmpty" class="table-empty hidden">
-                        <i class="fa-solid fa-inbox"></i>
-                        <p>No hay modelos configurados</p>
-                    </div>
+                    <div id="modelosEmpty" class="table-empty hidden"><i class="fa-solid fa-inbox"></i><p>No hay modelos configurados</p></div>
                 </div>
             </div>
-
         </div>
     </div>
 </div>
 
 <!-- =====================================================
-     MODAL PROP / BOX
+     MODAL UNIVERSAL (PROP / BOX)
 ===================================================== -->
 <div id="modalOverlay" class="modal-overlay hidden"></div>
-<div id="propModal" class="modal hidden">
+<div id="propModal" class="modal modal-wide hidden">
     <div class="modal-header">
         <span id="modalTitle" class="modal-title">AGREGAR PROP</span>
-        <button id="btnCloseModal" class="btn-icon-only">
-            <i class="fa-solid fa-xmark"></i>
-        </button>
+        <button id="btnCloseModal" class="btn-icon-only"><i class="fa-solid fa-xmark"></i></button>
     </div>
-
-    <div class="modal-body">
-        <input type="hidden" id="modalMode" value="prop" />
+    <div class="modal-body modal-body-stack">
         <input type="hidden" id="editingId" value="" />
 
-        <!-- NOMBRE -->
-        <div class="form-group">
-            <label class="form-label">Nombre</label>
-            <input id="propName" class="form-input" type="text" placeholder="Nombre descriptivo del prop" />
+        <!-- Fila superior: campos en flex-wrap horizontal -->
+        <div class="modal-fields-row">
+            <div class="form-group field-name">
+                <label class="form-label">Nombre</label>
+                <input id="propName" class="form-input" type="text" placeholder="Nombre descriptivo" />
+            </div>
+            <div class="form-group field-model">
+                <label class="form-label">Modelo del prop</label>
+                <div class="model-row">
+                    <input id="propModel" class="form-input" type="text" placeholder="Ej: prop_dumpster_3a" />
+                    <button id="btnPlaceProp" class="btn-secondary btn-place hidden">
+                        <i class="fa-solid fa-location-crosshairs"></i> COLOCAR
+                    </button>
+                </div>
+                <div id="coordsDisplay" class="coords-display hidden">
+                    <span id="coordsText">Sin coordenadas</span>
+                    <button id="btnClearCoords" class="btn-icon-only btn-danger-icon" title="Borrar">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="requiredItemGroup" class="form-group field-required hidden">
+                <label class="form-label">Item necesario <span class="form-hint">(opcional)</span></label>
+                <div class="item-search-wrap">
+                    <i class="fa-solid fa-cube"></i>
+                    <input id="requiredItemInput" class="form-input" type="text" placeholder="Buscar item..." autocomplete="off" />
+                    <div id="requiredItemSuggestions" class="suggestions-dropdown hidden"></div>
+                </div>
+                <div id="requiredItemPreview" class="selected-item-preview hidden"></div>
+            </div>
         </div>
 
-        <!-- MODELO -->
-        <div class="form-group">
-            <label class="form-label">Modelo del prop</label>
-            <div class="model-row">
-                <input id="propModel" class="form-input" type="text" placeholder="Ej: prop_dumpster_3a" />
-                <button id="btnPlaceProp" class="btn-secondary btn-place hidden">
-                    <i class="fa-solid fa-location-crosshairs"></i> COLOCAR
-                </button>
+        <!-- Fila inferior: builders de items -->
+        <div class="modal-builders-row">
+            <div class="loot-builder">
+                <div class="loot-inventory-panel">
+                    <div class="loot-panel-header">
+                        <span class="loot-panel-title">INVENTARIO DE ITEMS</span>
+                    </div>
+                    <div class="loot-inv-search">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input id="invSearchInput" class="form-input" type="text" placeholder="Buscar item..." autocomplete="off" />
+                    </div>
+                    <div id="invItemsGrid" class="inv-items-grid"></div>
+                    <div class="inv-pagination">
+                        <button id="invPrevPage" class="btn-page"><i class="fa-solid fa-chevron-left"></i></button>
+                        <span id="invPageInfo" class="page-info">1 / 1</span>
+                        <button id="invNextPage" class="btn-page"><i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
+                </div>
+                <div class="loot-selected-panel">
+                    <div class="loot-panel-header loot-selected-header">
+                        <span class="loot-panel-title">ITEMS SELECCIONADOS</span>
+                    </div>
+                    <div id="selectedItemsList" class="selected-items-list"></div>
+                    <div class="selected-footer">
+                        <span class="prob-label">TOTAL:</span>
+                        <span id="probTotalNew" class="prob-total-new">0%</span>
+                    </div>
+                </div>
             </div>
-            <!-- Coords (solo para BOX) -->
-            <div id="coordsDisplay" class="coords-display hidden">
-                <span id="coordsText">Sin coordenadas</span>
-                <button id="btnClearCoords" class="btn-icon-only btn-danger-icon" title="Borrar coordenadas">
-                    <i class="fa-solid fa-trash"></i>
-                </button>
-            </div>
-        </div>
-
-        <!-- ITEM NECESARIO (solo BOX) -->
-        <div id="requiredItemGroup" class="form-group hidden">
-            <label class="form-label">Item necesario <span class="form-hint">(opcional)</span></label>
-            <div class="item-search-wrap">
-                <i class="fa-solid fa-cube"></i>
-                <input id="requiredItemInput" class="form-input" type="text" placeholder="Buscar item..." autocomplete="off" />
-                <div id="requiredItemSuggestions" class="suggestions-dropdown hidden"></div>
-            </div>
-            <div id="requiredItemPreview" class="selected-item-preview hidden"></div>
-        </div>
-
-        <!-- ITEMS DEL LOOT -->
-        <div class="form-group">
-            <div class="items-header">
-                <label class="form-label">Items de loot</label>
-                <span id="probTotal" class="prob-total">Total: 0%</span>
-            </div>
-            <div id="itemSlotsList" class="item-slots-list"></div>
-            <button id="btnAddItemSlot" class="btn-add-slot">
-                <i class="fa-solid fa-plus"></i> Agregar slot
-            </button>
         </div>
     </div>
-
     <div class="modal-footer">
         <button id="btnCancelModal" class="btn-secondary">CANCELAR</button>
         <button id="btnSaveModal" class="btn-primary">GUARDAR</button>
@@ -250,32 +194,55 @@
      MODAL TIPO DE LOOT
 ===================================================== -->
 <div id="tipoModalOverlay" class="modal-overlay hidden"></div>
-<div id="tipoModal" class="modal hidden">
+<div id="tipoModal" class="modal modal-wide hidden">
     <div class="modal-header">
         <span id="tipoModalTitle" class="modal-title">AGREGAR TIPO</span>
         <button id="btnCloseTipoModal" class="btn-icon-only"><i class="fa-solid fa-xmark"></i></button>
     </div>
-    <div class="modal-body">
+    <div class="modal-body modal-body-stack">
         <input type="hidden" id="tipoEditingId" value="" />
-        <div class="form-row-2">
-            <div class="form-group">
+
+        <!-- Fila superior: campos en flex-wrap horizontal -->
+        <div class="modal-fields-row">
+            <div class="form-group field-name">
                 <label class="form-label">Nombre interno <span class="form-hint">(sin espacios)</span></label>
                 <input id="tipoName" class="form-input" type="text" placeholder="zombie_default" />
             </div>
-            <div class="form-group">
+            <div class="form-group field-name">
                 <label class="form-label">Label visible</label>
                 <input id="tipoLabel" class="form-input" type="text" placeholder="Zombie Normal" />
             </div>
         </div>
-        <div class="form-group">
-            <div class="items-header">
-                <label class="form-label">Items de loot</label>
-                <span id="tipoProbTotal" class="prob-total">Total: 0%</span>
+
+        <!-- Fila inferior: builders -->
+        <div class="modal-builders-row">
+            <div class="loot-builder">
+                <div class="loot-inventory-panel">
+                    <div class="loot-panel-header">
+                        <span class="loot-panel-title">INVENTARIO DE ITEMS</span>
+                    </div>
+                    <div class="loot-inv-search">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input id="tipoInvSearchInput" class="form-input" type="text" placeholder="Buscar item..." autocomplete="off" />
+                    </div>
+                    <div id="tipoInvItemsGrid" class="inv-items-grid"></div>
+                    <div class="inv-pagination">
+                        <button id="tipoInvPrevPage" class="btn-page"><i class="fa-solid fa-chevron-left"></i></button>
+                        <span id="tipoInvPageInfo" class="page-info">1 / 1</span>
+                        <button id="tipoInvNextPage" class="btn-page"><i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
+                </div>
+                <div class="loot-selected-panel">
+                    <div class="loot-panel-header loot-selected-header">
+                        <span class="loot-panel-title">ITEMS SELECCIONADOS</span>
+                    </div>
+                    <div id="tipoSelectedItemsList" class="selected-items-list"></div>
+                    <div class="selected-footer">
+                        <span class="prob-label">TOTAL:</span>
+                        <span id="tipoProbTotalNew" class="prob-total-new">0%</span>
+                    </div>
+                </div>
             </div>
-            <div id="tipoItemSlotsList" class="item-slots-list"></div>
-            <button id="btnAddTipoItemSlot" class="btn-add-slot">
-                <i class="fa-solid fa-plus"></i> Agregar slot
-            </button>
         </div>
     </div>
     <div class="modal-footer">
@@ -284,9 +251,7 @@
     </div>
 </div>
 
-<!-- =====================================================
-     MODAL MODELO
-===================================================== -->
+<!-- MODAL MODELO -->
 <div id="modeloModalOverlay" class="modal-overlay hidden"></div>
 <div id="modeloModal" class="modal hidden">
     <div class="modal-header">
@@ -321,6 +286,8 @@
         <button id="btnSaveModeloModal" class="btn-primary">GUARDAR</button>
     </div>
 </div>
+
+<!-- CONFIRMACION -->
 <div id="confirmOverlay" class="modal-overlay hidden"></div>
 <div id="confirmDialog" class="confirm-dialog hidden">
     <p id="confirmText" class="confirm-text">¿Estás seguro?</p>
@@ -330,9 +297,7 @@
     </div>
 </div>
 
-<!-- =====================================================
-     GIZMO HINT (hint en pantalla mientras el gizmo está activo)
-===================================================== -->
+<!-- GIZMO HINT -->
 <div id="gizmoHint" class="gizmo-hint hidden">
     <div class="gizmo-hint-row"><kbd>W A S D</kbd> Mover</div>
     <div class="gizmo-hint-row"><kbd>Q</kbd><kbd>E</kbd> Subir / Bajar</div>
@@ -341,9 +306,7 @@
     <div class="gizmo-hint-row"><kbd>Esc</kbd> Cancelar</div>
 </div>
 
-<!-- =====================================================
-     LOOT UI
-===================================================== -->
+<!-- LOOT UI -->
 <div id="lootOverlay" class="overlay hidden"></div>
 <div id="lootPanel" class="loot-panel hidden">
     <div class="panel-header">
@@ -351,9 +314,7 @@
             <i id="lootHeaderIcon" class="fa-solid fa-box-open header-icon"></i>
             <span id="lootPanelTitle" class="panel-title">BOTÍN ENCONTRADO</span>
         </div>
-        <button id="btnCloseLoot" class="btn-icon-only">
-            <i class="fa-solid fa-xmark"></i>
-        </button>
+        <button id="btnCloseLoot" class="btn-icon-only"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div class="header-divider"></div>
     <div id="lootGrid" class="loot-grid"></div>
@@ -372,9 +333,7 @@
     </div>
 </div>
 
-<!-- =====================================================
-     BOX UI (caja de jugador abatido)
-===================================================== -->
+<!-- BOX UI -->
 <div id="boxOverlay" class="overlay hidden"></div>
 <div id="boxPanel" class="loot-panel hidden">
     <div class="panel-header">
@@ -382,9 +341,7 @@
             <i class="fa-solid fa-toolbox header-icon"></i>
             <span id="boxPanelTitle" class="panel-title">CAJA</span>
         </div>
-        <button id="btnCloseBoxUI" class="btn-icon-only">
-            <i class="fa-solid fa-xmark"></i>
-        </button>
+        <button id="btnCloseBoxUI" class="btn-icon-only"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div class="header-divider"></div>
     <div id="boxGrid" class="loot-grid loading-grid">

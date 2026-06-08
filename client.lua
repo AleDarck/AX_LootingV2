@@ -10,6 +10,7 @@ local ESX = exports['es_extended']:getSharedObject()
 -- ============================================================
 
 local isCreatorOpen   = false
+local isGizmoActive   = false  -- true cuando el gizmo esta activo
 local isLootUIOpen    = false
 local isSearching     = false
 
@@ -31,16 +32,16 @@ local function rebuildModelLookup()
 end
 
 -- Maletines/cajas de jugadores abatidos
-local spawnedBoxes = {}  -- boxId => { entity, ownerName, ownerId }
-local activeBoxId  = nil -- boxId que el jugador tiene la UI abierta
+local spawnedBoxes = {}
+local activeBoxId  = nil
 
 -- Gizmo state
-local gizmoActive       = false
-local gizmoEntity       = nil
-local gizmoCoords       = vector3(0, 0, 0)
-local gizmoHeading      = 0.0
-local gizmoModel        = ''
-local gizmoCallback     = nil  -- function(x, y, z, w) llamada al confirmar
+local gizmoActive   = false
+local gizmoEntity   = nil
+local gizmoCoords   = vector3(0, 0, 0)
+local gizmoHeading  = 0.0
+local gizmoModel    = ''
+local gizmoCallback = nil
 
 -- ============================================================
 --  HELPERS
@@ -123,7 +124,6 @@ RegisterNUICallback('closeCreator', function(_, cb)
 end)
 
 -- PROPS ---
-
 RegisterNUICallback('createProp', function(data, cb)
     TriggerServerEvent('AX_LootingV2:server:createProp', data)
     cb('ok')
@@ -140,19 +140,18 @@ RegisterNUICallback('deleteProp', function(data, cb)
 end)
 
 -- BOXES ---
-
 RegisterNUICallback('createBox', function(data, cb)
-    -- Si viene con modo gizmo pendiente, primero abrimos el gizmo
-    -- El NUI nos pasa el modelo para el gizmo y el resto de data
-    -- El gizmo llama al callback con las coords finales
+    -- Ocultar creator completamente, iniciar gizmo
     isCreatorOpen = false
+    isGizmoActive = true
     SetNuiFocus(false, false)
+    SendNUIMessage({ action = 'hideCreator' })
 
     local pendingData = data
     startGizmo(data.model, function(x, y, z, w)
         pendingData.coords = { x = x, y = y, z = z, w = w }
         TriggerServerEvent('AX_LootingV2:server:createBox', pendingData)
-        -- Re-abrir creator (el servidor enviará boxesUpdated)
+        isGizmoActive = false
         isCreatorOpen = true
         SetNuiFocus(true, true)
         SendNUIMessage({ action = 'returnToCreator', tab = 'box' })
@@ -163,11 +162,15 @@ end)
 RegisterNUICallback('updateBox', function(data, cb)
     if data.useGizmo then
         isCreatorOpen = false
+        isGizmoActive = true
         SetNuiFocus(false, false)
+        SendNUIMessage({ action = 'hideCreator' })
+
         local pendingData = data
         startGizmo(data.model, function(x, y, z, w)
             pendingData.coords = { x = x, y = y, z = z, w = w }
             TriggerServerEvent('AX_LootingV2:server:updateBox', pendingData.id, pendingData)
+            isGizmoActive = false
             isCreatorOpen = true
             SetNuiFocus(true, true)
             SendNUIMessage({ action = 'returnToCreator', tab = 'box' })
@@ -183,7 +186,6 @@ RegisterNUICallback('deleteBox', function(data, cb)
     cb('ok')
 end)
 
--- Teleport al box (boton IR)
 RegisterNUICallback('gotoBox', function(data, cb)
     local boxId = data.id
     for _, b in ipairs(cachedBoxes) do
@@ -197,7 +199,6 @@ RegisterNUICallback('gotoBox', function(data, cb)
 end)
 
 -- LOOT TYPES ---
-
 RegisterNUICallback('createLootType', function(data, cb)
     TriggerServerEvent('AX_LootingV2:server:createLootType', data)
     cb('ok')
@@ -214,7 +215,6 @@ RegisterNUICallback('deleteLootType', function(data, cb)
 end)
 
 -- MODELS ---
-
 RegisterNUICallback('createModel', function(data, cb)
     TriggerServerEvent('AX_LootingV2:server:createModel', data)
     cb('ok')
@@ -229,6 +229,8 @@ RegisterNUICallback('deleteModel', function(data, cb)
     TriggerServerEvent('AX_LootingV2:server:deleteModel', data.id)
     cb('ok')
 end)
+
+-- Sugerencias de items (ox_inventory)
 RegisterNUICallback('searchItems', function(data, cb)
     local query   = tostring(data.query or ''):lower()
     local results = {}
@@ -237,7 +239,7 @@ RegisterNUICallback('searchItems', function(data, cb)
     local allItems = exports['ox_inventory']:Items()
     local count    = 0
     for name, item in pairs(allItems or {}) do
-        if count >= 12 then break end
+        if count >= 80 then break end
         local label = (item.label or ''):lower()
         if name:find(query, 1, true) or label:find(query, 1, true) then
             table.insert(results, {
@@ -250,6 +252,23 @@ RegisterNUICallback('searchItems', function(data, cb)
     cb(results)
 end)
 
+-- Obtener todos los items para el inventario del modal
+RegisterNUICallback('getAllItems', function(data, cb)
+    local allItems = exports['ox_inventory']:Items()
+    local results  = {}
+    for name, item in pairs(allItems or {}) do
+        table.insert(results, {
+            name  = name,
+            label = item.label or name,
+        })
+    end
+    -- Ordenar por label
+    table.sort(results, function(a, b)
+        return a.label:lower() < b.label:lower()
+    end)
+    cb(results)
+end)
+
 -- ============================================================
 --  GIZMO 3D - Colocacion de props
 -- ============================================================
@@ -259,8 +278,8 @@ function startGizmo(modelName, onConfirm)
     gizmoCallback = onConfirm
 
     local playerCoords = getPlayerCoords()
-    gizmoCoords   = playerCoords + vector3(2.0, 0.0, 0.0)
-    gizmoHeading  = GetEntityHeading(PlayerPedId())
+    gizmoCoords  = playerCoords + vector3(2.0, 0.0, 0.0)
+    gizmoHeading = GetEntityHeading(PlayerPedId())
 
     local model = GetHashKey(gizmoModel)
     RequestModel(model)
@@ -277,8 +296,6 @@ function startGizmo(modelName, onConfirm)
         SetModelAsNoLongerNeeded(model)
 
         gizmoActive = true
-
-        -- Mostrar hint
         SendNUIMessage({ action = 'showGizmoHint', visible = true })
     end)
 end
@@ -305,55 +322,46 @@ local function updateGizmoPosition()
     SetEntityHeading(gizmoEntity, gizmoHeading)
 end
 
--- Thread Gizmo
 CreateThread(function()
     while true do
         if gizmoActive then
-            local step = Config.Gizmo.moveStep
+            local step  = Config.Gizmo.moveStep
             local rStep = Config.Gizmo.rotateStep
 
-            -- Mover X/Y (WASD)
-            if IsControlPressed(0, 32) then  -- W
+            if IsControlPressed(0, 32) then
                 local rad = math.rad(GetEntityHeading(PlayerPedId()))
                 gizmoCoords = gizmoCoords + vector3(-math.sin(rad) * step, math.cos(rad) * step, 0.0)
             end
-            if IsControlPressed(0, 33) then  -- S
+            if IsControlPressed(0, 33) then
                 local rad = math.rad(GetEntityHeading(PlayerPedId()))
                 gizmoCoords = gizmoCoords + vector3(math.sin(rad) * step, -math.cos(rad) * step, 0.0)
             end
-            if IsControlPressed(0, 34) then  -- A
+            if IsControlPressed(0, 34) then
                 local rad = math.rad(GetEntityHeading(PlayerPedId()))
                 gizmoCoords = gizmoCoords + vector3(-math.cos(rad) * step, -math.sin(rad) * step, 0.0)
             end
-            if IsControlPressed(0, 35) then  -- D
+            if IsControlPressed(0, 35) then
                 local rad = math.rad(GetEntityHeading(PlayerPedId()))
                 gizmoCoords = gizmoCoords + vector3(math.cos(rad) * step, math.sin(rad) * step, 0.0)
             end
-
-            -- Subir / Bajar (Q/E)
-            if IsControlJustPressed(0, 44) then  -- Q
+            if IsControlJustPressed(0, 44) then
                 gizmoCoords = gizmoCoords + vector3(0.0, 0.0, step)
             end
-            if IsControlJustPressed(0, 38) then  -- E
+            if IsControlJustPressed(0, 38) then
                 gizmoCoords = gizmoCoords + vector3(0.0, 0.0, -step)
             end
-
-            -- Rotar (Num4 / Num6)
-            if IsControlJustPressed(0, 98) then   -- Num4
+            if IsControlJustPressed(0, 98) then
                 gizmoHeading = (gizmoHeading + rStep) % 360.0
             end
-            if IsControlJustPressed(0, 99) then   -- Num6
+            if IsControlJustPressed(0, 99) then
                 gizmoHeading = (gizmoHeading - rStep + 360.0) % 360.0
             end
-
-            -- Confirmar (ENTER)
             if IsControlJustPressed(0, 191) then
                 stopGizmo(true)
             end
-
-            -- Cancelar (ESC)
             if IsControlJustPressed(0, 200) then
                 stopGizmo(false)
+                isGizmoActive = false
                 isCreatorOpen = true
                 SetNuiFocus(true, true)
                 SendNUIMessage({ action = 'returnToCreator', tab = 'box' })
@@ -361,7 +369,6 @@ CreateThread(function()
 
             updateGizmoPosition()
 
-            -- Dibujar texto de ayuda en pantalla
             SetTextFont(4)
             SetTextProportional(true)
             SetTextScale(0.35, 0.35)
@@ -384,7 +391,7 @@ end)
 CreateThread(function()
     while true do
         Wait(0)
-        if isCreatorOpen then
+        if isCreatorOpen and not isGizmoActive then
             if IsControlJustPressed(0, 200) then
                 isCreatorOpen = false
                 SetNuiFocus(false, false)
@@ -400,7 +407,6 @@ end)
 --  LOOTING DE PROPS DEL MUNDO
 -- ============================================================
 
--- Lookup rapido: hash del modelo => propCfg
 local propModelLookup = {}
 
 local function rebuildPropLookup()
@@ -413,7 +419,6 @@ local function rebuildPropLookup()
     end
 end
 
--- Reconstruir lookup cuando la config cambia
 CreateThread(function()
     while true do
         Wait(2000)
@@ -421,9 +426,8 @@ CreateThread(function()
     end
 end)
 
-local nearbyLootProp = nil  -- { entity, propCfg, coords }
+local nearbyLootProp = nil
 
--- Deteccion de props
 CreateThread(function()
     while true do
         if isLootUIOpen or isSearching then
@@ -432,8 +436,7 @@ CreateThread(function()
         else
             local playerCoords = getPlayerCoords()
             local found        = nil
-
-            local objects = GetGamePool('CObject')
+            local objects      = GetGamePool('CObject')
             for _, obj in ipairs(objects) do
                 local dist = #(playerCoords - GetEntityCoords(obj))
                 if dist <= Config.DrawDistance then
@@ -445,14 +448,12 @@ CreateThread(function()
                     end
                 end
             end
-
             nearbyLootProp = found
             Wait(600)
         end
     end
 end)
 
--- Interaccion con props
 CreateThread(function()
     while true do
         if nearbyLootProp and not isLootUIOpen and not isSearching then
@@ -460,10 +461,9 @@ CreateThread(function()
             if IsControlJustPressed(0, 38) then
                 local prop = nearbyLootProp
                 isSearching = true
-
                 exports['AX_ProgressBar']:Progress({
-                    duration = Config.PedProgressBar.duration,
-                    label    = ped.modelCfg.is_animal and 'Desollando...' or Config.PedProgressBar.label,
+                    duration        = Config.ProgressBar.duration,
+                    label           = Config.ProgressBar.label,
                     useWhileDead    = false,
                     canCancel       = true,
                     controlDisables = {
@@ -473,9 +473,9 @@ CreateThread(function()
                         disableCombat      = true,
                     },
                     animation = {
-                        animDict = Config.PedProgressBar.animDict,
-                        anim     = Config.PedProgressBar.anim,
-                        flags    = Config.PedProgressBar.flags,
+                        animDict = Config.ProgressBar.animDict,
+                        anim     = Config.ProgressBar.anim,
+                        flags    = Config.ProgressBar.flags,
                     },
                 }, function(cancelled)
                     isSearching = false
@@ -501,9 +501,8 @@ end)
 --  LOOTING DE BOXES (coords fijas)
 -- ============================================================
 
-local nearbyConfigBox = nil  -- { boxCfg }
+local nearbyConfigBox = nil
 
--- Deteccion de boxes del creator (comparando coords)
 CreateThread(function()
     while true do
         if isLootUIOpen or isSearching then
@@ -512,7 +511,6 @@ CreateThread(function()
         else
             local playerCoords = getPlayerCoords()
             local found        = nil
-
             for _, b in ipairs(cachedBoxes) do
                 local c    = b.coords
                 local dist = #(playerCoords - vector3(c.x, c.y, c.z))
@@ -521,14 +519,12 @@ CreateThread(function()
                     break
                 end
             end
-
             nearbyConfigBox = found
             Wait(600)
         end
     end
 end)
 
--- Interaccion con boxes del creator
 CreateThread(function()
     while true do
         if nearbyConfigBox and not isLootUIOpen and not isSearching then
@@ -536,7 +532,6 @@ CreateThread(function()
             if IsControlJustPressed(0, 38) then
                 local box = nearbyConfigBox
                 isSearching = true
-
                 exports['AX_ProgressBar']:Progress({
                     duration        = Config.ProgressBar.duration,
                     label           = Config.ProgressBar.label,
@@ -557,8 +552,7 @@ CreateThread(function()
                     isSearching = false
                     if cancelled then return end
                     local c = box.boxCfg.coords
-                    TriggerServerEvent('AX_LootingV2:server:requestBoxLoot',
-                        box.boxCfg.id, c.x, c.y, c.z)
+                    TriggerServerEvent('AX_LootingV2:server:requestBoxLoot', box.boxCfg.id, c.x, c.y, c.z)
                 end)
             end
             Wait(0)
@@ -573,10 +567,8 @@ end)
 -- ============================================================
 
 RegisterNetEvent('AX_LootingV2:client:spawnPlayerBox', function(boxId, ownerName, ownerId)
-    local ped    = PlayerPedId()
     local coords = getPlayerCoords()
-
-    local model = Config.PlayerBox.prop
+    local model  = Config.PlayerBox.prop
     RequestModel(model)
     CreateThread(function()
         while not HasModelLoaded(model) do Wait(10) end
@@ -598,7 +590,6 @@ RegisterNetEvent('AX_LootingV2:client:spawnPlayerBox', function(boxId, ownerName
 
         local netId = NetworkGetNetworkIdFromEntity(box)
         spawnedBoxes[boxId] = { entity = box, ownerName = ownerName, ownerId = ownerId }
-
         TriggerServerEvent('AX_LootingV2:server:boxSpawned', boxId, ownerName, ownerId, netId)
         SetModelAsNoLongerNeeded(model)
     end)
@@ -622,21 +613,17 @@ end)
 
 RegisterNetEvent('AX_LootingV2:client:removeBox', function(boxId)
     local data = spawnedBoxes[boxId]
-    if data and DoesEntityExist(data.entity) then
-        DeleteEntity(data.entity)
-    end
+    if data and DoesEntityExist(data.entity) then DeleteEntity(data.entity) end
     spawnedBoxes[boxId] = nil
 end)
 
 RegisterNetEvent('AX_LootingV2:client:deleteBox', function(boxId)
-    -- Cerrar UI si estaba abierta
     if isLootUIOpen and activeBoxId == boxId then
         isLootUIOpen = false
         activeBoxId  = nil
         SetNuiFocus(false, false)
         SendNUIMessage({ action = 'closeLoot' })
     end
-
     CreateThread(function()
         Wait(400)
         local data = spawnedBoxes[boxId]
@@ -653,7 +640,6 @@ RegisterNetEvent('AX_LootingV2:client:deleteBox', function(boxId)
     end)
 end)
 
--- Deteccion de cajas de jugadores abatidos
 local nearbyPlayerBox = nil
 
 CreateThread(function()
@@ -664,7 +650,6 @@ CreateThread(function()
         else
             local playerCoords = getPlayerCoords()
             local found        = nil
-
             for boxId, data in pairs(spawnedBoxes) do
                 if DoesEntityExist(data.entity) then
                     local dist = #(playerCoords - GetEntityCoords(data.entity))
@@ -674,7 +659,6 @@ CreateThread(function()
                     end
                 end
             end
-
             nearbyPlayerBox = found
             Wait(500)
         end
@@ -696,7 +680,6 @@ CreateThread(function()
                 else
                     local currentBoxId = nearbyPlayerBox.boxId
                     isSearching = true
-
                     exports['AX_ProgressBar']:Progress({
                         duration        = Config.BagProgressBar.duration,
                         label           = Config.BagProgressBar.label,
@@ -827,11 +810,8 @@ end)
 --  LOOTING DE PEDS / ANIMALES
 -- ============================================================
 
--- Estado del ped abierto actualmente
 local activePedNetId = nil
-
--- Deteccion de peds muertos cercanos (cada 500ms)
-local nearbyPed = nil  -- { entity, netId, modelName, modelCfg }
+local nearbyPed      = nil
 
 CreateThread(function()
     while true do
@@ -842,8 +822,7 @@ CreateThread(function()
             local playerPed    = PlayerPedId()
             local playerCoords = getPlayerCoords()
             local found        = nil
-
-            local peds = GetGamePool('CPed')
+            local peds         = GetGamePool('CPed')
             for _, ped in ipairs(peds) do
                 if ped ~= playerPed
                     and IsPedDeadOrDying(ped, true)
@@ -852,12 +831,11 @@ CreateThread(function()
                 then
                     local dist = #(playerCoords - GetEntityCoords(ped))
                     if dist <= Config.DrawDistance then
-                        local hash    = GetEntityModel(ped)
+                        local hash     = GetEntityModel(ped)
                         local modelCfg = modelHashLookup[hash]
                         if modelCfg then
                             local netId = NetworkGetNetworkIdFromEntity(ped)
                             if netId and netId ~= 0 then
-                                -- Obtener nombre del modelo desde la config
                                 found = {
                                     entity    = ped,
                                     netId     = netId,
@@ -870,14 +848,12 @@ CreateThread(function()
                     end
                 end
             end
-
             nearbyPed = found
             Wait(500)
         end
     end
 end)
 
--- Interaccion con peds muertos
 CreateThread(function()
     while true do
         if nearbyPed and not isLootUIOpen and not isSearching then
@@ -887,13 +863,23 @@ CreateThread(function()
 
             ESX.ShowHelpNotification(label)
 
-            if IsControlJustPressed(0, 38) then -- E
+            if IsControlJustPressed(0, 38) then
                 local ped = nearbyPed
-                isSearching = true
 
+                -- Verificar knife en cliente para animales (igual que v1)
+                if ped.modelCfg.is_animal and ped.modelCfg.require_knife then
+                    local requiredWeapon = joaat('weapon_knife')
+                    if not HasPedGotWeapon(PlayerPedId(), requiredWeapon, false) then
+                        ESX.ShowNotification('Necesitas una Knife para deshuesar el animal.')
+                        Wait(0)
+                        goto continue
+                    end
+                end
+
+                isSearching = true
                 exports['AX_ProgressBar']:Progress({
-                    duration        = Config.ProgressBar.duration,
-                    label           = ped.modelCfg.is_animal and 'Desollando...' or Config.ProgressBar.label,
+                    duration        = Config.PedProgressBar.duration,
+                    label           = ped.modelCfg.is_animal and 'Desollando...' or Config.PedProgressBar.label,
                     useWhileDead    = false,
                     canCancel       = true,
                     controlDisables = {
@@ -903,9 +889,9 @@ CreateThread(function()
                         disableCombat      = true,
                     },
                     animation = {
-                        animDict = Config.ProgressBar.animDict,
-                        anim     = Config.ProgressBar.anim,
-                        flags    = Config.ProgressBar.flags,
+                        animDict = Config.PedProgressBar.animDict,
+                        anim     = Config.PedProgressBar.anim,
+                        flags    = Config.PedProgressBar.flags,
                     },
                 }, function(cancelled)
                     isSearching = false
@@ -922,6 +908,8 @@ CreateThread(function()
                     activePedNetId = ped.netId
                     TriggerServerEvent('AX_LootingV2:server:requestPedLoot', ped.netId, ped.modelName)
                 end)
+
+                ::continue::
             end
             Wait(0)
         else
@@ -930,21 +918,6 @@ CreateThread(function()
     end
 end)
 
--- Abrir UI de ped
-RegisterNetEvent('AX_LootingV2:client:openPedLootUI', function(loot, netId)
-    activePedNetId = netId
-    isLootUIOpen   = true
-    SetNuiFocus(true, true)
-    SendNUIMessage({
-        action      = 'openLoot',
-        items       = loot,
-        imagePath   = Config.InventoryImagePath,
-        revealDelay = Config.CardRevealDelay,
-        source      = 'ped',
-    })
-end)
-
--- El servidor pide borrar el ped (quedó vacío)
 RegisterNetEvent('AX_LootingV2:client:deletePed', function(netId)
     if isLootUIOpen then
         isLootUIOpen   = false
@@ -966,8 +939,6 @@ RegisterNetEvent('AX_LootingV2:client:deletePed', function(netId)
     end)
 end)
 
--- NUI callbacks para peds (reutiliza closeLoot, collectLootItem, collectAllLoot del servidor)
--- pero necesita notificar leaveped al cerrar
 RegisterNUICallback('closePedLoot', function(_, cb)
     if activePedNetId then
         TriggerServerEvent('AX_LootingV2:server:leavePed', activePedNetId)
