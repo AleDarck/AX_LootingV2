@@ -483,7 +483,7 @@ CreateThread(function()
                     if not DoesEntityExist(prop.entity) then return end
                     local dist = #(getPlayerCoords() - GetEntityCoords(prop.entity))
                     if dist > Config.DrawDistance + 1.0 then
-                        ESX.ShowNotification('Te alejaste demasiado.')
+                        ESX.ShowNotification('Te alejaste demasiado.','error')
                         return
                     end
                     local c = GetEntityCoords(prop.entity)
@@ -676,7 +676,7 @@ CreateThread(function()
 
             if IsControlJustPressed(0, 38) then
                 if isMine and isDead then
-                    ESX.ShowNotification('No puedes registrar tu propia caja mientras estás abatido.')
+                    ESX.ShowNotification('No puedes registrar tu propia caja mientras estás abatido.', 'error') 
                 else
                     local currentBoxId = nearbyPlayerBox.boxId
                     isSearching = true
@@ -732,9 +732,9 @@ RegisterNetEvent('AX_LootingV2:client:propOnCooldown', function(secondsLeft)
     local mins = math.floor(secondsLeft / 60)
     local secs = secondsLeft % 60
     if mins > 0 then
-        ESX.ShowNotification(string.format('Este objeto fue revisado. Vuelve en %d min %d seg.', mins, secs))
+        ESX.ShowNotification(string.format('Este objeto fue revisado. Vuelve en %d min %d seg.', mins, secs), 'warning')
     else
-        ESX.ShowNotification(string.format('Este objeto fue revisado. Vuelve en %d seg.', secs))
+        ESX.ShowNotification(string.format('Este objeto fue revisado. Vuelve en %d seg.', secs), 'warning')
     end
 end)
 
@@ -866,52 +866,84 @@ CreateThread(function()
             if IsControlJustPressed(0, 38) then
                 local ped = nearbyPed
 
-                -- Verificar knife en cliente para animales (igual que v1)
                 if ped.modelCfg.is_animal and ped.modelCfg.require_knife then
                     local requiredWeapon = joaat('weapon_knife')
                     if not HasPedGotWeapon(PlayerPedId(), requiredWeapon, false) then
-                        ESX.ShowNotification('Necesitas una Knife para deshuesar el animal.')
+                        ESX.ShowNotification('Necesitas una Knife para deshuesar el animal.', 'warning')
                         Wait(0)
-                        goto continue
+                    else
+                        isSearching = true
+                        exports['AX_ProgressBar']:Progress({
+                            duration        = Config.PedProgressBar.duration,
+                            label           = 'Desollando...',
+                            useWhileDead    = false,
+                            canCancel       = true,
+                            controlDisables = {
+                                disableMovement    = true,
+                                disableCarMovement = true,
+                                disableMouse       = false,
+                                disableCombat      = true,
+                            },
+                            animation = {
+                                animDict = Config.PedProgressBar.animDict,
+                                anim     = Config.PedProgressBar.anim,
+                                flags    = Config.PedProgressBar.flags,
+                            },
+                        }, function(cancelled)
+                            isSearching = false
+                            if cancelled then return end
+                            if not DoesEntityExist(ped.entity) then
+                                ESX.ShowNotification('El cuerpo ya no está aquí.', 'error')
+                                return
+                            end
+                            local dist = #(getPlayerCoords() - GetEntityCoords(ped.entity))
+                            if dist > Config.DrawDistance + 1.0 then
+                                ESX.ShowNotification('Te alejaste demasiado.', 'error')
+                                return
+                            end
+                            activePedNetId = ped.netId
+                            TriggerServerEvent('AX_LootingV2:server:requestPedLoot', ped.netId, ped.modelName)
+                        end)
+                        Wait(0)
                     end
+                else
+                    isSearching = true
+                    exports['AX_ProgressBar']:Progress({
+                        duration        = Config.PedProgressBar.duration,
+                        label           = Config.PedProgressBar.label,
+                        useWhileDead    = false,
+                        canCancel       = true,
+                        controlDisables = {
+                            disableMovement    = true,
+                            disableCarMovement = true,
+                            disableMouse       = false,
+                            disableCombat      = true,
+                        },
+                        animation = {
+                            animDict = Config.PedProgressBar.animDict,
+                            anim     = Config.PedProgressBar.anim,
+                            flags    = Config.PedProgressBar.flags,
+                        },
+                    }, function(cancelled)
+                        isSearching = false
+                        if cancelled then return end
+                        if not DoesEntityExist(ped.entity) then
+                            ESX.ShowNotification('El cuerpo ya no está aquí.', 'error')
+                            return
+                        end
+                        local dist = #(getPlayerCoords() - GetEntityCoords(ped.entity))
+                        if dist > Config.DrawDistance + 1.0 then
+                            ESX.ShowNotification('Te alejaste demasiado.', 'error')
+                            return
+                        end
+                        activePedNetId = ped.netId
+                        TriggerServerEvent('AX_LootingV2:server:requestPedLoot', ped.netId, ped.modelName)
+                    end)
+                    Wait(0)
                 end
-
-                isSearching = true
-                exports['AX_ProgressBar']:Progress({
-                    duration        = Config.PedProgressBar.duration,
-                    label           = ped.modelCfg.is_animal and 'Desollando...' or Config.PedProgressBar.label,
-                    useWhileDead    = false,
-                    canCancel       = true,
-                    controlDisables = {
-                        disableMovement    = true,
-                        disableCarMovement = true,
-                        disableMouse       = false,
-                        disableCombat      = true,
-                    },
-                    animation = {
-                        animDict = Config.PedProgressBar.animDict,
-                        anim     = Config.PedProgressBar.anim,
-                        flags    = Config.PedProgressBar.flags,
-                    },
-                }, function(cancelled)
-                    isSearching = false
-                    if cancelled then return end
-                    if not DoesEntityExist(ped.entity) then
-                        ESX.ShowNotification('El cuerpo ya no está aquí.')
-                        return
-                    end
-                    local dist = #(getPlayerCoords() - GetEntityCoords(ped.entity))
-                    if dist > Config.DrawDistance + 1.5 then
-                        ESX.ShowNotification('Te alejaste demasiado.')
-                        return
-                    end
-                    activePedNetId = ped.netId
-                    TriggerServerEvent('AX_LootingV2:server:requestPedLoot', ped.netId, ped.modelName)
-                end)
-
-                ::continue::
+            else
+                Wait(0)
             end
-            Wait(0)
         else
             Wait(500)
         end

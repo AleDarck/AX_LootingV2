@@ -4,7 +4,7 @@ Config = {}
 --  GENERAL
 -- ============================================================
 
-Config.DrawDistance     = 3.0    -- metros para detectar props y cajas
+Config.DrawDistance     = 2.0    -- metros para detectar props y cajas
 Config.PropCooldown     = 600    -- segundos de cooldown por instancia de prop (10 min)
 
 -- ============================================================
@@ -49,7 +49,7 @@ Config.InventoryImagePath = 'nui://ox_inventory/web/images/'
 --  LOOTINGBAG (Caja de jugador abatido)
 -- ============================================================
 Config.PlayerBox = {
-    prop           = 'prop_tool_box_07',
+    prop           = 'v_ind_meatboxsml',
     despawnIfEmpty = 20,    -- minutos hasta despawn si quedan items pero nadie la tocó recientemente
     despawnUntouched = 35,  -- minutos hasta despawn si nadie la tocó nunca
     protectedItems = {      -- items que NUNCA caen a la caja
@@ -65,7 +65,7 @@ Config.CardRevealDelay = 180  -- ms entre aparicion de cada card
 -- ============================================================
 --  DISCORD WEBHOOK
 -- ============================================================
-Config.DiscordWebhook = 'TU_WEBHOOK_AQUI'
+Config.DiscordWebhook = 'https://discord.com/api/webhooks/1478532917213794612/9fLQKjUXdYIz6xdC2_yKBg_OtKjTZOi0gmg7ZDzkM3pMwaFpnckFQ9BtmTgI8RYlZ1Dd'
 
 -- ============================================================
 --  STAFF GROUPS que pueden usar /lootcreator

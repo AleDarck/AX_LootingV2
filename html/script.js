@@ -341,12 +341,12 @@ function renderPropsTable(filter = '') {
 }
 function buildItemPills(items) {
     if (!items || !items.length) return '<span style="color:var(--text-muted);font-size:11px">—</span>';
-    return items.slice(0, 5).map(item => `
+    return items.slice(0, 7).map(item => `
         <div class="item-pill">
             <img src="${imgUrl(item.name)}" onerror="this.src='${defaultImgUrl()}'" />
             <span class="pill-range">x${item.min}-${item.max}</span>
             <span>${item.probability}%</span>
-        </div>`).join('') + (items.length > 5 ? `<span style="color:var(--text-muted);font-size:10px">+${items.length-5}</span>` : '');
+        </div>`).join('') + (items.length > 7 ? `<span style="color:var(--text-muted);font-size:10px">+${items.length-7}</span>` : '');
 }
 
 function buildPctBadge(items) {
